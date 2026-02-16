@@ -2,6 +2,8 @@
 
 ## 介绍
 
+> OmniTalk X 是基于 [OpenAOE](https://github.com/InternLM/OpenAOE) 项目的二次开发，主要借鉴了其前端设计，并进行了功能扩展和优化。
+
 **OmniTalk X** 是一款基于 OpenRouter 的 **AI 多模型群聊平台**。
 
 通过 OmniTalk X，你可以：
