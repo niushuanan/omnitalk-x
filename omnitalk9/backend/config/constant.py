@@ -1,0 +1,9 @@
+TYPE_BOT = "bot"
+TYPE_USER = "user"
+TYPE_SYSTEM = "system"
+
+DATE_PATTERN = "%Y%m%d"
+TIMEOUT_SECONDS = 30
+
+DEFAULT_TIMEOUT_SECONDS = 600
+

@@ -1,0 +1,201 @@
+@import (reference) url("../../styles/variables.less");
+
+.home {
+    margin: auto;
+    padding: 0;
+    display: flex;
+    flex-direction: row;
+    height: 100%;
+    box-sizing: border-box;
+    gap: 8px;
+    overflow: hidden;
+    
+    .leftColumn {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+        overflow: hidden;
+    }
+    
+    .headerRow {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 0 12px;
+        flex-shrink: 0;
+        height: 50px;
+        box-sizing: border-box;
+        
+        .promptInputWrapper {
+            flex: 1;
+            max-width: 600px;
+        }
+        
+        .clearBtn {
+            width: 32px;
+            height: 32px;
+            padding: 6px;
+            border: none;
+            background: transparent;
+            color: #999;
+            cursor: pointer;
+            border-radius: 6px;
+            transition: all 0.2s;
+            flex-shrink: 0;
+            
+            &:hover {
+                background: rgba(255, 77, 79, 0.1);
+                color: #ff4d4f;
+            }
+            
+            svg {
+                width: 100%;
+                height: 100%;
+            }
+        }
+    }
+    
+    .homeChats {
+        flex: 1;
+        position: relative;
+        overflow-y: auto;
+        overflow-x: hidden;
+        padding: 8px 12px;
+        box-sizing: border-box;
+        width: 100%;
+    }
+    
+    .modelListWrapper {
+        width: 60px;
+        padding: 8px 12px 8px 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-start;
+        flex-shrink: 0;
+    }
+}
+
+.homeModal {
+    background: var(--body-bg) !important;
+    color: var(--font-color);
+    :global {
+        .seal-modal-right .seal-modal-title {
+            color: var(--font-color);
+        }
+    }
+}
+
+.confirmOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.confirmModal {
+    background: white;
+    border-radius: 16px;
+    width: 90%;
+    max-width: 380px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    animation: slideUp 0.3s ease;
+    overflow: hidden;
+    text-align: center;
+    padding: 32px 24px 24px;
+}
+
+@keyframes slideUp {
+    from { 
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to { 
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.confirmIcon {
+    width: 56px;
+    height: 56px;
+    margin: 0 auto 16px;
+    background: linear-gradient(135deg, #fff5f5 0%, #ffe0e0 100%);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    
+    svg {
+        width: 28px;
+        height: 28px;
+        color: #ff4d4f;
+    }
+}
+
+.confirmTitle {
+    font-size: 18px;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 8px;
+}
+
+.confirmContent {
+    font-size: 14px;
+    color: #666;
+    line-height: 1.6;
+    margin-bottom: 24px;
+}
+
+.confirmActions {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+}
+
+.confirmCancel {
+    padding: 10px 24px;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    background: white;
+    color: #666;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+    
+    &:hover {
+        background: #f5f5f5;
+    }
+}
+
+.confirmOk {
+    padding: 10px 24px;
+    border: none;
+    border-radius: 8px;
+    background: linear-gradient(135deg, #ff6b6b 0%, #ee5a5a 100%);
+    color: white;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    
+    &:hover {
+        opacity: 0.9;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(255, 77, 79, 0.3);
+    }
+}

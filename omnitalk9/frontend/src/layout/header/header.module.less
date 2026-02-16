@@ -1,0 +1,219 @@
+@import (reference) url("../../styles/variables.less");
+
+.header {
+    padding: 8px 12px;
+    display: flex;
+    align-items: center;
+    width: 100%;
+    box-sizing: border-box;
+    z-index: 10;
+    height: 50px;
+    flex-shrink: 0;
+    
+    .header-title {
+        cursor: pointer;
+        
+        .logo-text {
+            display: inline-block;
+            padding: 6px 14px;
+            background: transparent;
+            font-size: 32px;
+            font-weight: 700;
+            color: black;
+            letter-spacing: 1px;
+            font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+        }
+    }
+    
+    .header-operation {
+        display: flex;
+        align-items: center;
+        
+        .settings-icon {
+            cursor: pointer;
+            opacity: 0.9;
+            transition: opacity 0.3s;
+            padding: 8px;
+            border-radius: 8px;
+            
+            &:hover {
+                opacity: 1;
+                background: rgba(102, 126, 234, 0.1);
+            }
+            
+            img {
+                width: 20px;
+                height: 20px;
+            }
+        }
+    }
+}
+
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.modal-content {
+    background: white;
+    border-radius: 16px;
+    width: 90%;
+    max-width: 420px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    animation: slideUp 0.3s ease;
+    overflow: hidden;
+}
+
+@keyframes slideUp {
+    from { 
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to { 
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 24px;
+    border-bottom: 1px solid #f0f0f0;
+    
+    .modal-title {
+        font-size: 18px;
+        font-weight: 600;
+        color: #333;
+    }
+    
+    .modal-close {
+        font-size: 24px;
+        color: #999;
+        cursor: pointer;
+        line-height: 1;
+        
+        &:hover {
+            color: #333;
+        }
+    }
+}
+
+.modal-body {
+    padding: 24px;
+}
+
+.form-group {
+    margin-bottom: 20px;
+    
+    .form-label {
+        display: block;
+        font-size: 14px;
+        font-weight: 500;
+        color: #333;
+        margin-bottom: 8px;
+    }
+    
+    .form-input {
+        width: 100%;
+        padding: 12px 16px;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        font-size: 14px;
+        outline: none;
+        transition: border-color 0.2s, box-shadow 0.2s;
+        box-sizing: border-box;
+        
+        &:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        &::placeholder {
+            color: #bbb;
+        }
+    }
+    
+    .form-hint {
+        margin-top: 8px;
+        font-size: 12px;
+        color: #999;
+    }
+}
+
+.modal-footer {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+    
+    .btn-cancel {
+        padding: 10px 20px;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        background: white;
+        color: #666;
+        font-size: 14px;
+        cursor: pointer;
+        transition: all 0.2s;
+        
+        &:hover {
+            background: #f5f5f5;
+        }
+    }
+    
+    .btn-primary {
+        padding: 10px 24px;
+        border: none;
+        border-radius: 8px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s;
+        
+        &:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+        }
+        
+        &:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+    }
+}
+
+.delete-link {
+    text-align: center;
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid #f0f0f0;
+    
+    span {
+        color: #ff4d4f;
+        font-size: 13px;
+        cursor: pointer;
+        
+        &:hover {
+            text-decoration: underline;
+        }
+    }
+}

@@ -1,0 +1,65 @@
+---
+models:
+    chatgpt:
+        provider: openai
+        webui:
+            avatar: 'https://oss.openmmlab.com/frontend/OpenAOE/openai.svg'
+            background: 'linear-gradient(180deg, rgba(156, 206, 116, 0.15) 0%, #1a8d15 100%)'
+        api:
+            model: 'openai/gpt-5.2'
+    claude:
+        provider: anthropic
+        webui:
+            avatar: 'https://oss.openmmlab.com/frontend/OpenAOE/claude.svg'
+            background: 'linear-gradient(180deg, rgba(141, 90, 181, 0.15) 0%, rgba(106, 39, 123, 0.7) 53.12%, #663E9A 100%)'
+        api:
+            model: 'anthropic/claude-opus-4.5'
+    grok:
+        provider: xai
+        webui:
+            avatar: 'https://x.ai/xai-logo.png'
+            background: 'linear-gradient(180deg, rgba(0, 0, 0, 0.15) 0%, rgba(0, 0, 0, 0.8) 100%)'
+        api:
+            model: 'x-ai/grok-4'
+    gemini:
+        provider: google
+        webui:
+            avatar: 'https://oss.openmmlab.com/frontend/OpenAOE/google-palm.webp'
+            background: 'linear-gradient(180deg, rgba(181, 90, 90, 0.15) 0%, #fa5ab1 100%)'
+        api:
+            model: 'google/gemini-3-pro-preview'
+    glm:
+        provider: zhipu
+        webui:
+            avatar: 'https://www.zhipuai.cn/images/logo.svg'
+            background: 'linear-gradient(180deg, rgba(70, 130, 255, 0.15) 0%, rgba(70, 130, 255, 0.8) 100%)'
+        api:
+            model: 'z-ai/glm-5'
+    kimi:
+        provider: moonshot
+        webui:
+            avatar: 'https://kimi.moonshot.cn/images/logo.svg'
+            background: 'linear-gradient(180deg, rgba(66, 133, 244, 0.15) 0%, rgba(66, 133, 244, 0.8) 100%)'
+        api:
+            model: 'moonshotai/kimi-k2.5'
+    minimax:
+        provider: minimax
+        webui:
+            avatar: 'https://oss.openmmlab.com/frontend/OpenAOE/minimax.png'
+            background: 'linear-gradient(180deg, rgba(207, 72, 72, 0.15) 0%, rgba(151, 43, 43, 0.7) 53.12%, #742828 100%)'
+        api:
+            model: 'minimax/minimax-m2.5'
+    qwen:
+        provider: qwen
+        webui:
+            avatar: 'https://qianwen.aliyun.com/images/logo.svg'
+            background: 'linear-gradient(180deg, rgba(255, 102, 0, 0.15) 0%, rgba(255, 102, 0, 0.8) 100%)'
+        api:
+            model: 'qwen/qwen3-max-thinking'
+    deepseek:
+        provider: deepseek
+        webui:
+            avatar: 'https://www.deepseek.com/logo.svg'
+            background: 'linear-gradient(180deg, rgba(65, 105, 225, 0.15) 0%, rgba(65, 105, 225, 0.8) 100%)'
+        api:
+            model: 'deepseek/deepseek-v3.2'
