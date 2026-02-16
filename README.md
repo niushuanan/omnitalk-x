@@ -11,6 +11,8 @@
 - **@提及**：通过 @ 指令指定特定 AI 回复
 - **自定义 Prompt**：为每个 AI 设置专属的 System Prompt
 - **群组管理**：创建不同的 AI 群组，灵活配置参与模型
+- **上下文记忆**：智能记住对话历史
+- **流式输出**：实时显示 AI 回复
 
 ---
 
@@ -25,24 +27,23 @@
 | 群组功能 | 创建和管理 AI 群组 |
 | 上下文记忆 | 智能记住对话历史 |
 | 流式输出 | 实时显示 AI 回复 |
-| 主题切换 | 支持浅色/深色主题 |
 
 ---
 
 ## 支持的 AI 模型
 
-| 模型 | Provider |
-|------|----------|
-| ChatGPT | openai |
-| Claude | anthropic |
-| Grok | xai |
-| Gemini | google |
-| GLM | zhipu |
-| Kimi | moonshot |
-| MiniMax | minimax |
-| Qwen | qwen |
-| DeepSeek | deepseek |
-| Seed | bytedance |
+| 模型 | Provider | 模型 ID |
+|------|----------|---------|
+| ChatGPT | openai | openai/gpt-5.2 |
+| Claude | anthropic | anthropic/claude-opus-4.5 |
+| Grok | xai | x-ai/grok-4 |
+| Gemini | google | google/gemini-3-pro-preview |
+| GLM | zhipu | z-ai/glm-5 |
+| Kimi | moonshot | moonshotai/kimi-k2.5 |
+| MiniMax | minimax | minimax/minimax-m2.5 |
+| Qwen | qwen | qwen/qwen3-max-thinking |
+| DeepSeek | deepseek | deepseek/deepseek-v3.2 |
+| Seed | bytedance | bytedance/seed-1.6-flash |
 
 ---
 
@@ -55,8 +56,6 @@
 - OpenRouter API Key
 
 ### 安装运行
-
-#### 方式一：源码运行
 
 ```bash
 # 1. 克隆项目
@@ -76,11 +75,9 @@ pip install -r requirements.txt
 python main.py
 ```
 
-#### 方式二：Docker 运行
-
-```bash
-docker run -p 8000:8000 -p 5173:5173 niushuanan/omnitalk-x
-```
+服务启动后，访问：
+- 前端：http://localhost:5173
+- 后端：http://localhost:8000
 
 ---
 
@@ -88,9 +85,9 @@ docker run -p 8000:8000 -p 5173:5173 niushuanan/omnitalk-x
 
 ### 获取 OpenRouter API Key
 
-1. 访问 [OpenRouter](https://openrouter.ai/)
-2. 注册账号并获取 API Key
-3. 在设置页面输入 API Key 即可使用
+1. 访问 [OpenRouter](https://openrouter.ai/) 注册账号
+2. 获取 API Key
+3. 在页面右侧点击设置图标，输入 API Key 即可使用
 
 ### 自定义 System Prompt
 
