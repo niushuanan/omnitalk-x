@@ -1,20 +1,5 @@
 # OmniTalk X
 
-<p align="center">
-  <img src="docs/_static/image/aoe-logo.svg" width="250" alt="OmniTalk X Logo"/>
-</p>
-
-<p align="center">
-  <a href="https://github.com/niushuanan/omnitalk-x">
-    <img src="https://img.shields.io/github/license/niushuanan/omnitalk-x" alt="License">
-  </a>
-  <a href="https://github.com/niushuanan/omnitalk-x">
-    <img src="https://img.shields.io/github/stars/niushuanan/omnitalk-x" alt="Stars">
-  </a>
-</p>
-
----
-
 ## 介绍
 
 **OmniTalk X** 是一款基于 OpenRouter 的 **AI 多模型群聊平台**。
