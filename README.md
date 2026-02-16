@@ -27,8 +27,6 @@
 - **自定义 Prompt**：为每个 AI 设置专属的 System Prompt
 - **群组管理**：创建不同的 AI 群组，灵活配置参与模型
 
-![OmniTalk X Demo](docs/_static/gif/aoe-en.gif)
-
 ---
 
 ## 功能特性
