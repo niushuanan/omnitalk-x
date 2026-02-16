@@ -1,20 +1,25 @@
-# IDE related
+# IDE
 .idea
 *.iml
+.vscode/
 
-# frontend ignore
-*/node_modules
-*/frontend/package-lock.json
-*/frontend/node_modules
+# Frontend
+omnitalk9/frontend/node_modules/
+omnitalk9/frontend/package-lock.json
 
-# backend ignore
-*/backend/config/config.yaml
+# Backend
+omnitalk9/backend/config/config.yaml
 config_test.yaml
 
-# pip related
+# Python
 *.pyc
-/build
-/dist
-*.egg-info
-out
-gen
+__pycache__/
+build/
+dist/
+*.egg-info/
+out/
+gen/
+
+# OS
+.DS_Store
+Thumbs.db
