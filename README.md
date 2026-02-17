@@ -1,5 +1,7 @@
 # OmniTalk X
 
+**English** | [简体中文](./docs/README_zh-CN.md)
+
 ## 介绍
 
 > OmniTalk X 是基于 [OpenAOE](https://github.com/InternLM/OpenAOE) 项目的二次开发，主要借鉴了其前端设计，并进行了功能扩展和优化。
