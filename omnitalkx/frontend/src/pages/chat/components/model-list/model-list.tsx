@@ -133,8 +133,19 @@ const ModelList = () => {
         loadSystemPrompts();
     }, []);
 
-    const loadSystemPrompts = () => {
+    const loadSystemPrompts = async () => {
         const prompts: Record<string, string> = {};
+        
+        try {
+            const res = await fetch('/api/default-prompts');
+            const data = await res.json();
+            if (data.prompts) {
+                Object.assign(prompts, data.prompts);
+            }
+        } catch (e) {
+            console.error('加载默认 prompt 失败:', e);
+        }
+        
         if (models) {
             Object.keys(models).forEach((modelName) => {
                 const saved = localStorage.getItem(SYSTEM_PROMPT_STORAGE_PREFIX + modelName);

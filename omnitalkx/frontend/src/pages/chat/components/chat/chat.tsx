@@ -13,6 +13,14 @@ import {
 } from 'sea-lion-ui';
 import CodeBlock from '@components/code-block/code-block.tsx';
 import { autoScroll, getNeedEventCallback } from '@utils/utils.ts';
+
+const filterMarkdownCodeBlocks = (text: string): string => {
+    if (!text) return text;
+    return text.replace(/```[\s\S]*?```/g, (match) => {
+        const codeContent = match.replace(/^```\w*\n?/, '').replace(/```$/, '');
+        return codeContent;
+    });
+};
 import {
     CLEAR_CONTEXT, SERIAL_SESSION
 } from '@constants/models.ts';
@@ -43,9 +51,52 @@ export async function copyToClipboard(text: string) {
         document.body.removeChild(textArea);
     }
 }
+
+const isCodeContent = (text: string): boolean => {
+    if (!text) return false;
+    const codePatterns = [
+        /[{}\[\]();:]/,
+        /^\s{2,}/m,
+        /^\t/m,
+        /\bfunction\s+\w+/,
+        /\bconst\s+\w+/,
+        /\bvar\s+\w+/,
+        /\blet\s+\w+/,
+        /=>/,
+        /\bimport\s+/,
+        /\bexport\s+/,
+        /\bclass\s+\w+/,
+        /\bdef\s+\w+/,
+        /\bprint\s*\(/,
+        /console\./,
+        /<\/?[a-z]+[^>]*>/i,
+        /^\s*[-+*]\s/m,
+        /^\s*\d+\.\s/m,
+    ];
+    const matchCount = codePatterns.filter(p => p.test(text)).length;
+    const hasMultipleLines = text.split('\n').length > 1;
+    const hasIndentation = /^(\s{2,}|\t)/m.test(text);
+    return matchCount >= 2 || (hasMultipleLines && hasIndentation);
+};
+
+const getCodeText = (children: any): string => {
+    if (typeof children === 'string') return children;
+    if (Array.isArray(children)) return children.map(getCodeText).join('');
+    if (children && typeof children === 'object' && children.props && children.props.children) {
+        return getCodeText(children.props.children);
+    }
+    return String(children || '');
+};
+
 export function CopyCode(props: { children: any }) {
     const ref = useRef<HTMLPreElement>(null);
     const [showCopy, setShowCopy] = React.useState(false);
+    const [isCode, setIsCode] = React.useState(false);
+
+    React.useEffect(() => {
+        const text = getCodeText(props.children);
+        setIsCode(isCodeContent(text));
+    }, [props.children]);
 
     const handleClickCopy = () => {
         if (ref.current) {
@@ -61,8 +112,8 @@ export function CopyCode(props: { children: any }) {
                 onFocus={() => setShowCopy(true)}
                 onMouseLeave={() => setShowCopy(false)}
             >
-                {/* show copy btn when hover code block */}
-                {showCopy && (
+                {/* show copy btn only when it's real code */}
+                {showCopy && isCode && (
                     <span
                         className={styles.copyCodeBtn}
                         {...getNeedEventCallback(handleClickCopy)}
@@ -201,7 +252,7 @@ function ChatMessage(props: { message: ChatMessageProps, sessionInfo: {id: numbe
                                 pre: CopyCode,
                             }}
                         >
-                            {message.text}
+                            {filterMarkdownCodeBlocks(message.text)}
                         </ReactMarkdown>
                     </div>
                     {/* 用户头像 */}

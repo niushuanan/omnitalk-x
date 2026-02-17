@@ -113,6 +113,29 @@ async def get_providers():
     }
 
 
+@router.get("/default-prompts")
+async def get_default_prompts():
+    """获取所有 AI 的默认 System Prompt"""
+    # provider 到 model key 的映射
+    provider_to_model = {
+        "openai": "chatgpt",
+        "anthropic": "claude",
+        "xai": "grok",
+        "google": "gemini",
+        "zhipu": "glm",
+        "moonshot": "kimi",
+        "minimax": "minimax",
+        "qwen": "qwen",
+        "deepseek": "deepseek",
+        "bytedance": "seed",
+    }
+    prompts = {}
+    for provider, model_key in provider_to_model.items():
+        if provider in PROVIDERS:
+            prompts[model_key] = PROVIDERS[provider].get("default_system", "")
+    return {"prompts": prompts}
+
+
 @router.post("/api/chat/group")
 async def chat_group(request: Request):
     """群聊 API：@所有人时全部 AI 回复，否则随机 3 个 AI 回复"""

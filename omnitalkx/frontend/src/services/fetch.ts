@@ -1,6 +1,25 @@
 import API from '@config/api-config';
 import { DEFAULT_PROVIDER } from '@constants/models';
 
+// 全局默认 prompts
+let defaultPromptsCache: Record<string, string> = {};
+
+// 加载默认 prompts
+export const loadDefaultPrompts = async () => {
+    try {
+        const res = await fetch('/api/default-prompts');
+        const data = await res.json();
+        if (data.prompts) {
+            defaultPromptsCache = data.prompts;
+        }
+    } catch (e) {
+        console.error('加载默认 prompt 失败:', e);
+    }
+};
+
+// 立即加载
+loadDefaultPrompts();
+
 export const getHeaders = (apiKey?: string) => {
     const headers: Record<string, string> = {
         'Content-Type': 'application/json',
@@ -21,19 +40,12 @@ const getSystemPromptByModel = (model: string): string => {
         return customPrompt;
     }
     
-    const prompts: Record<string, string> = {
-        'chatgpt': '【强制规则】你只能回复一句话，不超过35字！不要重复用户的话！不要替其他AI说话！你=ChatGPT，小庄微信群里的朋友。简洁回复，像微信聊天。',
-        'claude': '【强制规则】你只能回复一句话，不超过35字！不要重复用户的话！不要替其他AI说话！你=Claude，小庄微信群里的朋友。简洁回复，像微信聊天。',
-        'grok': '【强制规则】你只能回复一句话，不超过35字！不要重复用户的话！不要替其他AI说话！你=Grok，小庄微信群里的朋友。简洁回复，像微信聊天。',
-        'gemini': '【强制规则】你只能回复一句话，不超过35字！不要重复用户的话！不要替其他AI说话！你=Gemini，小庄微信群里的朋友。简洁回复，像微信聊天。',
-        'glm': '【强制规则】你只能回复一句话，不超过35字！不要重复用户的话！不要替其他AI说话！你=GLM，小庄微信群里的朋友。简洁回复，像微信聊天。',
-        'kimi': '【强制规则】你只能回复一句话，不超过35字！不要重复用户的话！不要替其他AI说话！你=Kimi，小庄微信群里的朋友。简洁回复，像微信聊天。',
-        'minimax': '【强制规则】你只能回复一句话，不超过35字！不要重复用户的话！不要替其他AI说话！你=MiniMax，小庄微信群里的朋友。简洁回复，像微信聊天。',
-        'qwen': '【强制规则】你只能回复一句话，不超过35字！不要重复用户的话！不要替其他AI说话！你=Qwen，小庄微信群里的朋友。简洁回复，像微信聊天。',
-        'deepseek': '【强制规则】你只能回复一句话，不超过35字！不要重复用户的话！不要替其他AI说话！你=DeepSeek，小庄微信群里的朋友。简洁回复，像微信聊天。',
-        'seed': '【强制规则】你只能回复一句话，不超过35字！不要重复用户的话！不要替其他AI说话！你=Seed，小庄微信群里的朋友。简洁回复，像微信聊天。',
-    };
-    return prompts[model] || '';
+    // 使用后端默认 prompt
+    if (defaultPromptsCache[model]) {
+        return defaultPromptsCache[model];
+    }
+    
+    return '';
 };
 
 export const getPayload = (provider: string, model: string, prompt: string, messages: { text: string; sender_type: string; }[]) => {
