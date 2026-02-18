@@ -55,8 +55,8 @@ PROVIDERS = {
     },
     "bytedance": {
         "id": "bytedance-seed/seed-1.6-flash",
-        "name": "Seed 1.6",
-        "default_system": """你是Seed，由字节跳动打造的AI助手（豆包），以年轻活泼、亲和力强著称。你现在位于小庄的AI群聊中，群里有ChatGPT、Claude、Grok、Gemini、GLM、Kimi、MiniMax、Qwen、DeepSeek。小庄是真人在群里哦。规则：只说一句话，不超过35字，像微信聊天那样活泼简洁，不要在回复前加自己的名字。""",
+        "name": "Seed",
+        "default_system": """你是Seed，字节跳动的AI助手。你现在在小庄的AI群里，和ChatGPT、Claude、Grok、Gemini、GLM、Kimi、MiniMax、Qwen、DeepSeek一起。小庄是真人在群里。规则：只说一句话，不超过20字，像微信聊天那样简洁自然。不要加括号！""",
     },
     "moonshot": {
         "id": "moonshotai/kimi-k2.5",
@@ -241,10 +241,11 @@ async def chat_completion_stream(provider: str, payload: dict[str, Any], custom_
     cfg = get_provider_config(provider)
     normalized = build_payload(provider, payload)
 
-    api_key = custom_api_key or load_api_key()
+    # 优先使用前端传入的 API Key，不再读取后端文件
+    api_key = custom_api_key
     if not api_key:
         yield format_sse("", "stop")
-        yield json.dumps({"success": "false", "msg": "请配置 OpenRouter API Key"})
+        yield json.dumps({"success": "false", "msg": "请在设置中输入 API Key"})
         yield "data: [DONE]\n\n"
         return
 
@@ -307,9 +308,12 @@ async def chat_completion(provider: str, payload: dict[str, Any], custom_api_key
     normalized = build_payload(provider, payload)
     normalized["stream"] = False
 
-    api_key = custom_api_key or load_api_key()
+    # 优先使用前端传入的 API Key，不再读取后端文件
+    api_key = custom_api_key
     if not api_key:
-        return {"success": False, "msg": "请配置 OpenRouter API Key"}
+        return {"success": False, "msg": "请在设置中输入 API Key"}
+    
+    print(f"[DEBUG] provider={provider}, api_key={api_key[:10]}..., custom_api_key={custom_api_key[:10] if custom_api_key else None}")
 
     headers = {
         "Content-Type": "application/json",
@@ -351,9 +355,10 @@ async def chat_completion_with_context(provider: str, user_message: str, custom_
         "messages": [{"role": "system", "content": cfg["default_system"]}] + messages
     }
 
-    api_key = custom_api_key or load_api_key()
+    # 优先使用前端传入的 API Key，不再读取后端文件
+    api_key = custom_api_key
     if not api_key:
-        return {"success": False, "msg": "请配置 OpenRouter API Key", "provider": provider}
+        return {"success": False, "msg": "请在设置中输入 API Key", "provider": provider}
 
     headers = {
         "Content-Type": "application/json",

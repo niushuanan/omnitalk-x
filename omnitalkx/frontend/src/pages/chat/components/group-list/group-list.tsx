@@ -202,9 +202,43 @@ const GroupEditor = ({ group, onClose, onSave, onDelete }: { group: GroupInfo | 
     const { models } = useContext(GlobalConfigContext);
     const [name, setName] = useState(group?.name || '');
     const [selectedBots, setSelectedBots] = useState<string[]>(group?.bots || []);
+    const [announcement, setAnnouncement] = useState(group?.announcement || '');
     const [loading, setLoading] = useState(false);
 
     const allBots = models ? Object.keys(models) : [];
+
+    useEffect(() => {
+        if (group) {
+            loadAnnouncement();
+        }
+    }, [group]);
+
+    const loadAnnouncement = async () => {
+        if (!group) return;
+        try {
+            const res = await fetch(`/api/groups/${group.id}/announcement`);
+            const data = await res.json();
+            if (data.success) {
+                setAnnouncement(data.announcement || '');
+            }
+        } catch (e) {
+            console.error('加载公告失败:', e);
+        }
+    };
+
+    const generateDefaultAnnouncement = (): string => {
+        if (!group) return '';
+        const botNames = group.bot_names || [];
+        if (botNames.length === 0) {
+            return `这是一个名为「${group.name}」的群聊，群成员有小庄。`;
+        }
+        const namesStr = botNames.length === 1 
+            ? botNames[0] 
+            : botNames.length === 2 
+                ? `${botNames[0]}、${botNames[1]}`
+                : `${botNames.slice(0, -1).join('、')}、${botNames[botNames.length - 1]}`;
+        return `这是一个名为「${group.name}」的群聊，群成员有${namesStr}等等（包含小庄）。`;
+    };
 
     const toggleBot = (bot: string) => {
         setSelectedBots(prev => 
@@ -248,6 +282,9 @@ const GroupEditor = ({ group, onClose, onSave, onDelete }: { group: GroupInfo | 
             
             const data = await res.json();
             if (data.success) {
+                if (group && !group.is_default) {
+                    await updateAnnouncement();
+                }
                 message.success(group ? '群组已更新' : '群组已创建');
                 onSave();
             } else {
@@ -259,6 +296,21 @@ const GroupEditor = ({ group, onClose, onSave, onDelete }: { group: GroupInfo | 
             setLoading(false);
         }
     };
+
+    const updateAnnouncement = async () => {
+        if (!group) return;
+        try {
+            await fetch(`/api/groups/${group.id}/announcement`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ announcement: announcement })
+            });
+        } catch (e) {
+            console.error('更新公告失败:', e);
+        }
+    };
+
+    const isDefaultGroup = group?.is_default && group?.name === '全员群';
 
     return (
         <div className={styles.modalOverlay} onClick={onClose}>
@@ -296,6 +348,21 @@ const GroupEditor = ({ group, onClose, onSave, onDelete }: { group: GroupInfo | 
                             ))}
                         </div>
                     </div>
+
+                    {!isDefaultGroup && (
+                        <div className={styles.formGroup}>
+                            <label>群公告</label>
+                            <textarea
+                                className={styles.textarea}
+                                value={announcement}
+                                onChange={(e) => setAnnouncement(e.target.value)}
+                                placeholder={generateDefaultAnnouncement()}
+                                maxLength={2000}
+                                rows={4}
+                            />
+                            <div className={styles.hint}>* 不填则使用默认公告</div>
+                        </div>
+                    )}
                 </div>
                 
                 <div className={styles.editorFooter}>

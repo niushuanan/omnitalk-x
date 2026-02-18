@@ -9,6 +9,7 @@ export interface GroupInfo {
     bot_count: number;
     is_default: boolean;
     created_at: string;
+    announcement?: string;
 }
 
 interface GroupStore {
@@ -18,6 +19,7 @@ interface GroupStore {
     setCurrentGroupId: (groupId: string) => void;
     getCurrentGroup: () => GroupInfo | undefined;
     getGroupBots: () => string[];
+    getGroupBotNames: () => string[];
 }
 
 export const useGroupStore = create<GroupStore>()(
@@ -48,6 +50,11 @@ export const useGroupStore = create<GroupStore>()(
             getGroupBots: () => {
                 const group = get().getCurrentGroup();
                 return group?.bots || [];
+            },
+            
+            getGroupBotNames: () => {
+                const group = get().getCurrentGroup();
+                return group?.bot_names || [];
             }
         }),
         {

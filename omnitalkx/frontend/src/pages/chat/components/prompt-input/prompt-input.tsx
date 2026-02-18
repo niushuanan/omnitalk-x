@@ -222,8 +222,7 @@ const PromptInput = () => {
                     messages: [
                         { role: 'system', content: getSystemPrompt(provider) },
                         ...context
-                    ],
-                    max_tokens: 3000
+                    ]
                 })
             });
 

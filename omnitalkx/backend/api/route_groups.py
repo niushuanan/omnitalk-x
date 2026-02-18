@@ -9,6 +9,10 @@ from backend.service.group_service import (
     delete_group,
     get_group_context,
     clear_group_context,
+    get_group_announcement,
+    update_group_announcement,
+    generate_default_announcement,
+    is_default_group,
     BOT_NAMES
 )
 
@@ -25,6 +29,10 @@ class UpdateGroupRequest(BaseModel):
     bots: List[str]
 
 
+class UpdateAnnouncementRequest(BaseModel):
+    announcement: str
+
+
 @router.get("/groups")
 async def get_groups():
     """获取群组列表"""
@@ -32,6 +40,7 @@ async def get_groups():
     result = []
     for g in groups:
         bot_names = [BOT_NAMES.get(b, b) for b in g.get("bots", [])]
+        announcement = g.get("announcement", "")
         result.append({
             "id": g["id"],
             "name": g["name"],
@@ -39,7 +48,8 @@ async def get_groups():
             "bot_names": bot_names,
             "bot_count": len(g.get("bots", [])),
             "is_default": g.get("is_default", False),
-            "created_at": g.get("created_at", "")
+            "created_at": g.get("created_at", ""),
+            "announcement": announcement
         })
     return {"success": True, "groups": result}
 
@@ -103,3 +113,36 @@ async def clear_group_context_api(group_id: str):
     
     clear_group_context(group_id)
     return {"success": True, "message": "上下文已清除"}
+
+
+@router.get("/groups/{group_id}/announcement")
+async def get_group_announcement_api(group_id: str):
+    """获取群公告"""
+    group = get_group(group_id)
+    if not group:
+        return {"success": False, "message": "群组不存在"}
+    
+    announcement = group.get("announcement", "")
+    is_default = is_default_group(group)
+    
+    if is_default:
+        announcement = generate_default_announcement(group)
+    
+    return {"success": True, "announcement": announcement, "is_default": is_default}
+
+
+@router.put("/groups/{group_id}/announcement")
+async def update_group_announcement_api(group_id: str, request: UpdateAnnouncementRequest):
+    """更新群公告"""
+    group = get_group(group_id)
+    if not group:
+        return {"success": False, "message": "群组不存在"}
+    
+    if is_default_group(group):
+        return {"success": False, "message": "全员群不支持自定义公告"}
+    
+    updated_group = update_group_announcement(group_id, request.announcement)
+    if not updated_group:
+        return {"success": False, "message": "更新失败"}
+    
+    return {"success": True, "group": updated_group}

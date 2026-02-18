@@ -21,6 +21,8 @@ BOT_NAMES = {
     "seed": "Seed",
 }
 
+ALL_BOTS_SET = set(DEFAULT_BOTS)
+
 if not os.path.exists(CONTEXTS_DIR):
     os.makedirs(CONTEXTS_DIR)
 
@@ -33,6 +35,7 @@ def load_groups() -> List[Dict]:
                 "id": "grp_all",
                 "name": "全员群",
                 "bots": DEFAULT_BOTS.copy(),
+                "announcement": "",
                 "is_default": True,
                 "created_at": datetime.now().isoformat()
             }
@@ -41,7 +44,13 @@ def load_groups() -> List[Dict]:
         return default_groups
     
     with open(GROUPS_FILE, 'r', encoding='utf-8') as f:
-        return json.load(f)
+        groups = json.load(f)
+    
+    for g in groups:
+        if "announcement" not in g:
+            g["announcement"] = ""
+    
+    return groups
 
 
 def save_groups(groups: List[Dict]) -> bool:
@@ -68,7 +77,7 @@ def create_group(name: str, bots: List[str]) -> Optional[Dict]:
     """创建新群组"""
     groups = load_groups()
     
-    if len(groups) >= 6:
+    if len(groups) >= 20:
         return None
     
     group_names = [g["name"] for g in groups]
@@ -79,6 +88,7 @@ def create_group(name: str, bots: List[str]) -> Optional[Dict]:
         "id": f"grp_{int(datetime.now().timestamp() * 1000)}",
         "name": name,
         "bots": bots,
+        "announcement": "",
         "is_default": False,
         "created_at": datetime.now().isoformat()
     }
@@ -216,3 +226,60 @@ def get_all_groups_context(bots: List[str]) -> Dict[str, List[Dict]]:
                 result[bot].extend(group_context[bot])
     
     return result
+
+
+def is_default_group(group: Dict) -> bool:
+    """判断是否为全员群：名称为"全员群"且包含所有AI成员"""
+    if group.get("name") != "全员群":
+        return False
+    group_bots = set(group.get("bots", []))
+    return group_bots == ALL_BOTS_SET
+
+
+def generate_default_announcement(group: Dict) -> str:
+    """生成默认公告模板"""
+    bot_names_list = group.get("bots", [])
+    bot_names_readable = [BOT_NAMES.get(b, b) for b in bot_names_list]
+    
+    if not bot_names_readable:
+        return f"这是一个名为「{group.get('name', '群聊')}」的群聊，群成员有小庄。"
+    
+    if len(bot_names_readable) == 1:
+        names_str = bot_names_readable[0]
+    elif len(bot_names_readable) == 2:
+        names_str = f"{bot_names_readable[0]}、{bot_names_readable[1]}"
+    else:
+        names_str = "、".join([str(n) for n in bot_names_readable[:-1]]) + f"、{bot_names_readable[-1]}"
+    
+    return f"这是一个名为「{group.get('name', '群聊')}」的群聊，群成员有{names_str}等等（包含小庄）。"
+
+
+def get_group_announcement(group_id: str) -> str:
+    """获取群公告，如果未设置则返回默认模板"""
+    group = get_group(group_id)
+    if not group:
+        return ""
+    
+    announcement = group.get("announcement", "")
+    if announcement:
+        return announcement
+    
+    return generate_default_announcement(group)
+
+
+def update_group_announcement(group_id: str, announcement: str) -> Optional[Dict]:
+    """更新群公告"""
+    groups = load_groups()
+    
+    for i, g in enumerate(groups):
+        if g["id"] == group_id:
+            if is_default_group(g):
+                return None
+            
+            g["announcement"] = announcement
+            
+            if save_groups(groups):
+                return g
+            return None
+    
+    return None

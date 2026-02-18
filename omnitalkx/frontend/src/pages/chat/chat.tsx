@@ -28,6 +28,25 @@ const ChatPage: React.FC = () => {
     const privateChat = botStore.privateChat;
     const [showConfirm, setShowConfirm] = useState(false);
     const [showSettings, setShowSettings] = useState(false);
+    const currentGroup = groupStore.getCurrentGroup();
+
+    // 获取群公告
+    const announcement = currentGroup?.announcement || '';
+    
+    // 生成默认公告
+    const getDefaultAnnouncement = () => {
+        if (!currentGroup) return '';
+        const botNames = currentGroup.bot_names || [];
+        if (botNames.length === 0) return '';
+        const namesStr = botNames.length === 1 
+            ? botNames[0] 
+            : botNames.length === 2 
+                ? `${botNames[0]}、${botNames[1]}`
+                : `${botNames.slice(0, -1).join('、')}、${botNames[botNames.length - 1]}`;
+        return `这是一个名为「${currentGroup.name}」的群聊，群成员有${namesStr}等等（包含小庄）。`;
+    };
+    
+    const displayAnnouncement = announcement || getDefaultAnnouncement();
 
     useEffect(() => {
         loadGroups();
@@ -66,8 +85,6 @@ const ChatPage: React.FC = () => {
         message.success('当前聊天记录已清除');
         setShowConfirm(false);
     };
-
-    const currentGroup = groupStore.getCurrentGroup();
 
     return (
         <div className={styles.home}>
