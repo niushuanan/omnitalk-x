@@ -1,5 +1,6 @@
 const STORAGE_KEY = 'ai_context_history_v2';
 const LEGACY_KEY = 'ai_context_history';
+const ANNOUNCEMENT_PREFIX = '【群公告】';
 
 export type ContextMessage = { role: string; content: string; ts?: number };
 
@@ -48,21 +49,22 @@ const writeStore = (store: ContextStore) => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(store));
 };
 
-export const loadAllContext = (provider: string): ContextMessage[] => {
+export const loadGroupContext = (groupId: string, provider: string): ContextMessage[] => {
     const store = readStore();
-    const messages: ContextMessage[] = [];
-    Object.values(store.groups).forEach((groupMap) => {
-        const groupMsgs = groupMap?.[provider];
-        if (Array.isArray(groupMsgs)) {
-            messages.push(...groupMsgs);
-        }
-    });
+    const groupMsgs = store.groups?.[groupId]?.[provider];
+    if (Array.isArray(groupMsgs)) {
+        return [...groupMsgs].sort((a, b) => (a.ts || 0) - (b.ts || 0));
+    }
+    return [];
+};
+
+export const loadPrivateContext = (provider: string): ContextMessage[] => {
+    const store = readStore();
     const privateMsgs = store.private?.[provider];
     if (Array.isArray(privateMsgs)) {
-        messages.push(...privateMsgs);
+        return [...privateMsgs].sort((a, b) => (a.ts || 0) - (b.ts || 0));
     }
-    // sort by timestamp if present
-    return messages.sort((a, b) => (a.ts || 0) - (b.ts || 0));
+    return [];
 };
 
 export const saveGroupContext = (groupId: string, provider: string, messages: ContextMessage[]) => {
@@ -75,17 +77,20 @@ export const saveGroupContext = (groupId: string, provider: string, messages: Co
 };
 
 export const ensureGroupAnnouncement = (groupId: string, provider: string, announcement: string) => {
-    if (!announcement) return;
     const store = readStore();
     if (!store.groups[groupId]) {
         store.groups[groupId] = {};
     }
     const existing = store.groups[groupId][provider] || [];
-    const tag = `【群公告】${announcement}`;
-    if (!existing.some(m => m.role === 'system' && m.content === tag)) {
-        store.groups[groupId][provider] = [{ role: 'system', content: tag, ts: Date.now() }, ...existing];
+    const filtered = existing.filter(m => !(m.role === 'system' && m.content.startsWith(ANNOUNCEMENT_PREFIX)));
+    if (!announcement) {
+        store.groups[groupId][provider] = filtered;
         writeStore(store);
+        return;
     }
+    const tag = `${ANNOUNCEMENT_PREFIX}${announcement}`;
+    store.groups[groupId][provider] = [{ role: 'system', content: tag, ts: Date.now() }, ...filtered];
+    writeStore(store);
 };
 
 export const savePrivateContext = (provider: string, messages: ContextMessage[]) => {

@@ -11,7 +11,8 @@ import { defaultModels } from '@config/model-config.ts';
 import styles from './prompt-input.module.less';
 import { getApiKey } from '@/utils/api-key.ts';
 import {
-    loadAllContext,
+    loadGroupContext,
+    loadPrivateContext,
     saveGroupContext,
     savePrivateContext,
     ensureGroupAnnouncement,
@@ -126,8 +127,11 @@ const PromptInput = () => {
         inputRef.current?.focus();
     };
 
-    const getAIContext = (provider: string): ContextMessage[] => {
-        return loadAllContext(provider);
+    const getAIContext = (provider: string, groupId?: string, isPrivate?: boolean): ContextMessage[] => {
+        if (isPrivate) {
+            return loadPrivateContext(provider);
+        }
+        return loadGroupContext(groupId || 'grp_all', provider);
     };
 
     // 非流式调用单个AI，带上下文记忆
@@ -147,9 +151,9 @@ const PromptInput = () => {
             : (currentGroup ? `group_${currentGroup.id}` : 'group');
 
         // 获取完整上下文（群聊+私聊）
-        const context = getAIContext(provider);
+        const context = getAIContext(provider, currentGroupId, isPrivate);
 
-        const styleCfg = getChatStyleConfig();
+        const styleCfg = getChatStyleConfig(currentGroupId);
         const payload = {
             model: provider,
             temperature: styleCfg.temperature,
@@ -387,9 +391,9 @@ const PromptInput = () => {
 
         // 同时发起所有AI的请求，谁先回复谁先显示
         const currentGroupId = currentGroup ? currentGroup.id : 'grp_all';
-        if (!privateChat && currentGroup?.announcement) {
+        if (!privateChat && currentGroup) {
             targetProviders.forEach((provider) => {
-                ensureGroupAnnouncement(currentGroupId, provider, currentGroup.announcement);
+                ensureGroupAnnouncement(currentGroupId, provider, currentGroup.announcement || '');
             });
         }
         const promises = targetProviders.map(provider => 

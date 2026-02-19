@@ -216,7 +216,7 @@ const GroupEditor = ({ group, onClose, onSave, onDelete }: { group: GroupInfo | 
         if (group) {
             loadAnnouncement();
         }
-        const cfg = getChatStyleConfig();
+        const cfg = getChatStyleConfig(group?.id);
         setTemperature(cfg.temperature);
         setMaxTokens(cfg.max_tokens);
         setTopP(cfg.top_p);
@@ -322,7 +322,7 @@ const GroupEditor = ({ group, onClose, onSave, onDelete }: { group: GroupInfo | 
     const isDefaultGroup = group?.is_default && group?.name === '全员群';
 
     const handleStyleChange = (next: { temperature?: number; max_tokens?: number; top_p?: number }) => {
-        setChatStyleConfig(next);
+        setChatStyleConfig(next, group?.id);
         if (typeof next.temperature === 'number') setTemperature(next.temperature);
         if (typeof next.max_tokens === 'number') setMaxTokens(next.max_tokens);
         if (typeof next.top_p === 'number') setTopP(next.top_p);

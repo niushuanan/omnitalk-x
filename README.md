@@ -13,6 +13,7 @@ OmniTalk X is a local‑first, multi‑model AI group chat product. It is design
 - `@` mention targeting: `@所有人` or specific model.
 - Per‑model System Prompt control.
 - Group creation, editing, and announcements.
+- “话痨程度”参数按群保存，仅影响当前群。
 - Conversation memory with local persistence.
 - Real‑time streaming UI.
 
@@ -76,6 +77,7 @@ See `DEPLOY.md` for full Nginx configuration and steps.
 
 ## Data & Privacy
 - Chat history, prompts, and “话痨程度” config are saved in browser `localStorage`.
+- 群公告只影响所属群聊的上下文。
 - API key is saved to `omnitalkx/api_key.txt` on the server and masked in UI.
 - No user data is committed to this repo. Files like `groups.json`, `contexts/`, and `api_key.txt` are git‑ignored.
 
