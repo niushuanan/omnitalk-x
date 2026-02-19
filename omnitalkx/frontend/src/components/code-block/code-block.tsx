@@ -90,6 +90,7 @@ const CodeBlock: React.FC<any> = ({
             style={codeStyle}
             customStyle={{
                 borderRadius: '10px',
+                background: 'transparent',
             }}
             PreTag="div"
             {...rest}

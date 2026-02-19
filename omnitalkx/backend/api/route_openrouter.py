@@ -138,7 +138,7 @@ async def get_default_prompts():
 
 @router.post("/api/chat/group")
 async def chat_group(request: Request):
-    """群聊 API：@所有人时全部 AI 回复，否则随机 3 个 AI 回复"""
+    """群聊 API：@所有人时全部 AI 回复，否则随机 5 个 AI 回复"""
     try:
         data = await request.json()
     except Exception:
@@ -151,11 +151,11 @@ async def chat_group(request: Request):
     if not message:
         return {"success": False, "msg": "消息不能为空"}
     
-    # @所有人时调用全部 9 个 AI，否则随机 3 个
+    # @所有人时调用全部 AI，否则随机 5 个
     if mention_all:
         providers = list(PROVIDERS.keys())
     else:
-        providers = get_random_providers(3)
+        providers = get_random_providers(5)
     
     results = await group_chat(providers, message, custom_api_key)
     

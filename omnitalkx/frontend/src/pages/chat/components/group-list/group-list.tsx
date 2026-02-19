@@ -5,6 +5,8 @@ import { GlobalConfigContext } from '@components/global-config/global-config-con
 import styles from './group-list.module.less';
 import { BotState, useBotStore } from '@/store/bot.ts';
 import { useGroupStore, GroupInfo } from '@/store/group.ts';
+import { getApiKey, removeApiKey, setApiKey as storeApiKey } from '@/utils/api-key.ts';
+import { getChatStyleConfig, setChatStyleConfig } from '@/utils/chat-style.ts';
 
 const SettingsIcon = () => (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -102,7 +104,7 @@ const GroupList = () => {
         const names: Record<string, string> = {
             'chatgpt': 'ChatGPT', 'claude': 'Claude', 'grok': 'Grok',
             'gemini': 'Gemini', 'glm': 'GLM', 'kimi': 'Kimi',
-            'minimax': 'MiniMax', 'qwen': 'Qwen', 'deepseek': 'DeepSeek', 'seed': '豆包',
+            'minimax': 'MiniMax', 'qwen': 'Qwen', 'deepseek': 'DeepSeek', 'seed': 'Seed',
         };
         return names[bot] || bot;
     };
@@ -204,6 +206,9 @@ const GroupEditor = ({ group, onClose, onSave, onDelete }: { group: GroupInfo | 
     const [selectedBots, setSelectedBots] = useState<string[]>(group?.bots || []);
     const [announcement, setAnnouncement] = useState(group?.announcement || '');
     const [loading, setLoading] = useState(false);
+    const [temperature, setTemperature] = useState(0.7);
+    const [maxTokens, setMaxTokens] = useState(1000);
+    const [topP, setTopP] = useState(0.9);
 
     const allBots = models ? Object.keys(models) : [];
 
@@ -211,6 +216,10 @@ const GroupEditor = ({ group, onClose, onSave, onDelete }: { group: GroupInfo | 
         if (group) {
             loadAnnouncement();
         }
+        const cfg = getChatStyleConfig();
+        setTemperature(cfg.temperature);
+        setMaxTokens(cfg.max_tokens);
+        setTopP(cfg.top_p);
     }, [group]);
 
     const loadAnnouncement = async () => {
@@ -250,7 +259,7 @@ const GroupEditor = ({ group, onClose, onSave, onDelete }: { group: GroupInfo | 
         const names: Record<string, string> = {
             'chatgpt': 'ChatGPT', 'claude': 'Claude', 'grok': 'Grok',
             'gemini': 'Gemini', 'glm': 'GLM', 'kimi': 'Kimi',
-            'minimax': 'MiniMax', 'qwen': 'Qwen', 'deepseek': 'DeepSeek', 'seed': '豆包',
+            'minimax': 'MiniMax', 'qwen': 'Qwen', 'deepseek': 'DeepSeek', 'seed': 'Seed',
         };
         return names[bot] || bot;
     };
@@ -312,6 +321,13 @@ const GroupEditor = ({ group, onClose, onSave, onDelete }: { group: GroupInfo | 
 
     const isDefaultGroup = group?.is_default && group?.name === '全员群';
 
+    const handleStyleChange = (next: { temperature?: number; max_tokens?: number; top_p?: number }) => {
+        setChatStyleConfig(next);
+        if (typeof next.temperature === 'number') setTemperature(next.temperature);
+        if (typeof next.max_tokens === 'number') setMaxTokens(next.max_tokens);
+        if (typeof next.top_p === 'number') setTopP(next.top_p);
+    };
+
     return (
         <div className={styles.modalOverlay} onClick={onClose}>
             <div className={styles.editorModal} onClick={e => e.stopPropagation()}>
@@ -363,6 +379,70 @@ const GroupEditor = ({ group, onClose, onSave, onDelete }: { group: GroupInfo | 
                             <div className={styles.hint}>* 不填则使用默认公告</div>
                         </div>
                     )}
+
+                    <div className={styles.formGroup}>
+                        <label>话痨程度</label>
+                        <div className={styles.chatStyleBox}>
+                            <div className={styles.chatStyleHeader}>
+                                <span className={styles.chatStyleTitle}>参数控制</span>
+                                <span className={styles.chatStyleBadge}>仅当前群生效</span>
+                            </div>
+                            <div className={styles.chatStyleDesc}>
+                                影响回复的长度与发散程度
+                            </div>
+                            <div className={styles.sliderRow}>
+                                <div className={styles.sliderMeta}>
+                                    <span className={styles.sliderLabel}>随机性</span>
+                                    <span className={styles.sliderHint}>更高更发散</span>
+                                </div>
+                                <div className={styles.sliderControl}>
+                                    <input
+                                        type="range"
+                                        min={0}
+                                        max={2}
+                                        step={0.1}
+                                        value={temperature}
+                                        onChange={(e) => handleStyleChange({ temperature: Number(e.target.value) })}
+                                    />
+                                    <span className={styles.sliderValue}>{temperature.toFixed(1)}</span>
+                                </div>
+                            </div>
+                            <div className={styles.sliderRow}>
+                                <div className={styles.sliderMeta}>
+                                    <span className={styles.sliderLabel}>长度上限</span>
+                                    <span className={styles.sliderHint}>更大更话痨</span>
+                                </div>
+                                <div className={styles.sliderControl}>
+                                    <input
+                                        type="range"
+                                        min={128}
+                                        max={2048}
+                                        step={64}
+                                        value={maxTokens}
+                                        onChange={(e) => handleStyleChange({ max_tokens: Number(e.target.value) })}
+                                    />
+                                    <span className={styles.sliderValue}>{maxTokens}</span>
+                                </div>
+                            </div>
+                            <div className={styles.sliderRow}>
+                                <div className={styles.sliderMeta}>
+                                    <span className={styles.sliderLabel}>集中度</span>
+                                    <span className={styles.sliderHint}>更低更有惊喜</span>
+                                </div>
+                                <div className={styles.sliderControl}>
+                                    <input
+                                        type="range"
+                                        min={0.1}
+                                        max={1}
+                                        step={0.05}
+                                        value={topP}
+                                        onChange={(e) => handleStyleChange({ top_p: Number(e.target.value) })}
+                                    />
+                                    <span className={styles.sliderValue}>{topP.toFixed(2)}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 
                 <div className={styles.editorFooter}>
@@ -409,7 +489,7 @@ const SettingsModal = ({ onClose }: { onClose: () => void }) => {
             const data = await res.json();
             if (data.has_key) {
                 setApiKey(data.masked_key);
-                setInputKey(localStorage.getItem('omnitalk9_api_key') || '');
+                setInputKey(getApiKey());
             }
         } catch (e) {
             console.error('加载 API Key 失败:', e);
@@ -455,7 +535,7 @@ const SettingsModal = ({ onClose }: { onClose: () => void }) => {
             });
             const data = await res.json();
             if (data.status === 'ok') {
-                localStorage.setItem('omnitalk9_api_key', key);
+                storeApiKey(key);
                 setApiKey(key);
                 message.success('API Key 保存成功');
             } else {
@@ -474,7 +554,7 @@ const SettingsModal = ({ onClose }: { onClose: () => void }) => {
             const res = await fetch('/api/key', { method: 'DELETE' });
             const data = await res.json();
             if (data.status === 'ok') {
-                localStorage.removeItem('omnitalk9_api_key');
+                removeApiKey();
                 setApiKey('');
                 setInputKey('');
                 message.success('API Key 已删除');
@@ -512,7 +592,7 @@ const SettingsModal = ({ onClose }: { onClose: () => void }) => {
         const names: Record<string, string> = {
             'chatgpt': 'ChatGPT', 'claude': 'Claude', 'grok': 'Grok',
             'gemini': 'Gemini', 'glm': 'GLM', 'kimi': 'Kimi',
-            'minimax': 'MiniMax', 'qwen': 'Qwen', 'deepseek': 'DeepSeek', 'seed': '豆包',
+            'minimax': 'MiniMax', 'qwen': 'Qwen', 'deepseek': 'DeepSeek', 'seed': 'Seed',
         };
         return names[modelName] || modelName;
     };

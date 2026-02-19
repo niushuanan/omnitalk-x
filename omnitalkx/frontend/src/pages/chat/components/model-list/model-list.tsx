@@ -9,9 +9,9 @@ import styles from './model-list.module.less';
 import { BotState, useBotStore } from '@/store/bot.ts';
 import { useChatStore } from '@/store/chat.ts';
 import { useConfigStore } from '@/store/config.ts';
+import { getApiKey, removeApiKey, setApiKey as storeApiKey } from '@/utils/api-key.ts';
 
 const AVATAR_STORAGE_PREFIX = 'model_avatar_';
-const API_KEY_STORAGE = 'omnitalk9_api_key';
 const SYSTEM_PROMPT_STORAGE_PREFIX = 'system_prompt_';
 
 function ModelAvatar(props: {
@@ -121,7 +121,7 @@ const ModelList = () => {
     const logoInputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
-        const savedKey = localStorage.getItem(API_KEY_STORAGE);
+        const savedKey = getApiKey();
         if (savedKey) {
             setApiKey(savedKey);
             setInputKey(savedKey);
@@ -206,7 +206,7 @@ const ModelList = () => {
             });
             const data = await res.json();
             if (data.status === 'ok') {
-                localStorage.setItem(API_KEY_STORAGE, key);
+                storeApiKey(key);
                 setApiKey(key);
                 message.success('API Key 保存成功');
             } else {
@@ -225,7 +225,7 @@ const ModelList = () => {
             const res = await fetch('/api/key', { method: 'DELETE' });
             const data = await res.json();
             if (data.status === 'ok') {
-                localStorage.removeItem(API_KEY_STORAGE);
+                removeApiKey();
                 setApiKey('');
                 setInputKey('');
                 message.success('API Key 已删除');

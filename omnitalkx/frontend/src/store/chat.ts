@@ -5,6 +5,7 @@ import { scrollToBottom } from '@utils/utils.ts';
 import { getHeaders, getPayload, getUrl } from '@services/fetch.ts';
 import { fetchBotAnswer } from '@services/home.ts';
 import { DEFAULT_BOT, SERIAL_SESSION, STREAM_BOT } from '@constants/models.ts';
+import { clearAllContext, clearGroupContext, clearPrivateContext, modelKeyToProvider } from '@/utils/context-storage.ts';
 
 export interface ChatMessage {
     text: string;
@@ -413,7 +414,7 @@ export const useChatStore = create<ChatStore>()(
             },
             clearAllData() {
                 localStorage.removeItem('chat');
-                localStorage.removeItem('ai_context_history');
+                clearAllContext();
                 set(() => ({ sessions: [createSession({ name: DEFAULT_BOT })] }));
                 window.location.reload();
             },
@@ -427,15 +428,12 @@ export const useChatStore = create<ChatStore>()(
                 }
                 // 清除对应的上下文本地存储
                 if (sessionName === 'group') {
-                    localStorage.removeItem('ai_context_history');
+                    clearGroupContext('grp_all');
+                } else if (sessionName.startsWith('group_')) {
+                    clearGroupContext(sessionName.replace('group_', ''));
                 } else {
-                    const CONTEXT_STORAGE_KEY = 'ai_context_history';
-                    const storage = localStorage.getItem(CONTEXT_STORAGE_KEY);
-                    if (storage) {
-                        const allContexts = JSON.parse(storage);
-                        delete allContexts[sessionName];
-                        localStorage.setItem(CONTEXT_STORAGE_KEY, JSON.stringify(allContexts));
-                    }
+                    const provider = modelKeyToProvider(sessionName) || sessionName;
+                    clearPrivateContext(provider);
                 }
             },
         }),

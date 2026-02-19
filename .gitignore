@@ -30,6 +30,8 @@ dist/
 *.egg-info/
 out/
 gen/
+.venv/
+venv/
 
 # OS
 .DS_Store

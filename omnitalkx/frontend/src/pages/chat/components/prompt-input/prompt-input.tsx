@@ -9,6 +9,15 @@ import { useBotStore } from '@/store/bot.ts';
 import { useGroupStore } from '@/store/group.ts';
 import { defaultModels } from '@config/model-config.ts';
 import styles from './prompt-input.module.less';
+import { getApiKey } from '@/utils/api-key.ts';
+import {
+    loadAllContext,
+    saveGroupContext,
+    savePrivateContext,
+    ensureGroupAnnouncement,
+    ContextMessage,
+} from '@/utils/context-storage.ts';
+import { getChatStyleConfig } from '@/utils/chat-style.ts';
 
 const AI_LIST = defaultModels;
 
@@ -49,7 +58,7 @@ const PromptInput = () => {
     const chatStore = useChatStore();
     const botStore = useBotStore();
     const groupStore = useGroupStore();
-    const inputRef = useRef<HTMLInputElement>(null);
+    const inputRef = useRef<HTMLTextAreaElement>(null);
     const mentionRef = useRef<HTMLDivElement>(null);
 
     const privateChat = botStore.privateChat;
@@ -85,7 +94,7 @@ const PromptInput = () => {
         }
     }, [chosenMention, showMention]);
 
-    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
         const value = e.target.value;
         setInputValue(value);
         
@@ -117,90 +126,20 @@ const PromptInput = () => {
         inputRef.current?.focus();
     };
 
-    // 上下文存储 key
-    const CONTEXT_STORAGE_KEY = 'ai_context_history';
-
-    // 保存上下文到 localStorage
-    const saveContextToStorage = (provider: string, messages: {role: string, content: string}[]) => {
-        const storage = localStorage.getItem(CONTEXT_STORAGE_KEY);
-        const allContexts: Record<string, {role: string, content: string}[]> = storage ? JSON.parse(storage) : {};
-        allContexts[provider] = messages;
-        localStorage.setItem(CONTEXT_STORAGE_KEY, JSON.stringify(allContexts));
-    };
-
-    // 从 localStorage 读取上下文
-    const loadContextFromStorage = (provider: string): {role: string, content: string}[] => {
-        const storage = localStorage.getItem(CONTEXT_STORAGE_KEY);
-        if (!storage) return [];
-        const allContexts: Record<string, {role: string, content: string}[]> = JSON.parse(storage);
-        return allContexts[provider] || [];
-    };
-
-    // 清除指定 AI 的上下文
-    const clearContextFromStorage = (provider: string) => {
-        const storage = localStorage.getItem(CONTEXT_STORAGE_KEY);
-        if (!storage) return;
-        const allContexts: Record<string, {role: string, content: string}[]> = JSON.parse(storage);
-        delete allContexts[provider];
-        localStorage.setItem(CONTEXT_STORAGE_KEY, JSON.stringify(allContexts));
-    };
-
-    // 获取指定AI的完整上下文（群聊+私聊+本地存储）
-    const getAIContext = (provider: string): {role: string, content: string}[] => {
-        const context: {role: string, content: string}[] = [];
-        const modelKey = PROVIDER_TO_MODEL[provider] || provider;
-        const providerMap: Record<string, string> = {
-            'openai': 'chatgpt',
-            'anthropic': 'claude',
-            'xai': 'grok',
-            'google': 'gemini',
-            'zhipu': 'glm',
-            'moonshot': 'kimi',
-            'minimax': 'minimax',
-            'qwen': 'qwen',
-            'deepseek': 'deepseek',
-            'bytedance': 'seed',
-        };
-        
-        // 1. 获取本地存储的历史上下文
-        const storedContext = loadContextFromStorage(provider);
-        context.push(...storedContext);
-        
-        // 2. 获取群聊消息（根据当前群组）
-        const currentGroup = groupStore.getCurrentGroup();
-        const groupSessionName = currentGroup ? `group_${currentGroup.id}` : 'group';
-        const groupSession = chatStore.sessions.find(s => s.name === groupSessionName);
-        
-        if (groupSession && groupSession.messages) {
-            for (const msg of groupSession.messages) {
-                if (msg.sender_type === 'user') {
-                    context.push({ role: 'user', content: msg.text });
-                } else if (msg.sender_type === 'assistant') {
-                    const speaker = msg.provider === provider ? 'assistant' : 'user';
-                    context.push({ role: speaker, content: msg.text });
-                }
-            }
-        }
-        
-        // 3. 获取私聊消息（如果有）
-        if (privateChat) {
-            const privateSession = chatStore.sessions.find(s => s.name === privateChat.toLowerCase());
-            if (privateSession && privateSession.messages) {
-                for (const msg of privateSession.messages) {
-                    if (msg.sender_type === 'user') {
-                        context.push({ role: 'user', content: msg.text });
-                    } else if (msg.sender_type === 'assistant') {
-                        context.push({ role: 'assistant', content: msg.text });
-                    }
-                }
-            }
-        }
-        
-        return context;
+    const getAIContext = (provider: string): ContextMessage[] => {
+        return loadAllContext(provider);
     };
 
     // 非流式调用单个AI，带上下文记忆
-    const fetchAI = async (provider: string, userText: string, apiKey: string) => {
+    const fetchAI = async (
+        provider: string,
+        userText: string,
+        apiKey: string,
+        mentionNote?: string,
+        announcementNote?: string,
+        currentGroupId?: string,
+        isPrivate?: boolean,
+    ) => {
         const modelKey = PROVIDER_TO_MODEL[provider] || provider;
         // 私聊用AI名称，群聊用群组ID
         const sessionName = privateChat 
@@ -210,21 +149,48 @@ const PromptInput = () => {
         // 获取完整上下文（群聊+私聊）
         const context = getAIContext(provider);
 
-        try {
-            const res = await fetch(`/api/v1/${provider}/chat/completions/non-stream`, {
+        const styleCfg = getChatStyleConfig();
+        const payload = {
+            model: provider,
+            temperature: styleCfg.temperature,
+            max_tokens: styleCfg.max_tokens,
+            top_p: styleCfg.top_p,
+            messages: [
+                { role: 'system', content: getSystemPrompt(provider) },
+                ...(mentionNote ? [{ role: 'system', content: mentionNote }] : []),
+                ...(announcementNote ? [{ role: 'system', content: announcementNote }] : []),
+                ...context,
+                { role: 'user', content: userText }
+            ]
+        };
+
+        const headers = {
+            'Content-Type': 'application/json',
+            'X-Api-Key': apiKey
+        };
+
+        const tryFetch = async (url: string) => {
+            return await fetch(url, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-Api-Key': apiKey
-                },
-                body: JSON.stringify({
-                    model: provider,
-                    messages: [
-                        { role: 'system', content: getSystemPrompt(provider) },
-                        ...context
-                    ]
-                })
+                headers,
+                body: JSON.stringify(payload)
             });
+        };
+
+        try {
+            let res: Response;
+            try {
+                res = await tryFetch(`/api/v1/${provider}/chat/completions/non-stream`);
+            } catch (e: any) {
+                // fallback to backend direct in dev if proxy fails
+                const isLocal = ['localhost', '127.0.0.1'].includes(window.location.hostname);
+                if (isLocal) {
+                    const fallbackUrl = `http://localhost:8000/api/v1/${provider}/chat/completions/non-stream`;
+                    res = await tryFetch(fallbackUrl);
+                } else {
+                    throw e;
+                }
+            }
 
             let replyText = '';
 
@@ -245,12 +211,17 @@ const PromptInput = () => {
             }
 
             // 保存上下文到本地存储
-            const updatedContext = [
+            const now = Date.now();
+            const updatedContext: ContextMessage[] = [
                 ...context,
-                { role: 'user', content: userText },
-                { role: 'assistant', content: replyText }
+                { role: 'user', content: userText, ts: now },
+                { role: 'assistant', content: replyText, ts: now + 1 }
             ];
-            saveContextToStorage(provider, updatedContext);
+            if (isPrivate) {
+                savePrivateContext(provider, updatedContext);
+            } else if (currentGroupId) {
+                saveGroupContext(currentGroupId, provider, updatedContext);
+            }
 
             // 完整回复生成后再添加到界面
             chatStore.addMessage(sessionName, {
@@ -299,6 +270,8 @@ const PromptInput = () => {
         
         // 确定要调用的AI列表
         let targetProviders: string[] = [];
+        let mentionAll = false;
+        let mentionedModels: string[] = [];
         
         // model key 到 provider 的映射
         const modelToProvider: Record<string, string> = {
@@ -321,16 +294,22 @@ const PromptInput = () => {
                 targetProviders = [provider];
             }
         } else if (text.includes('@所有人')) {
-            // @所有人，调用全部10个AI
-            targetProviders = ['openai', 'anthropic', 'xai', 'google', 'zhipu', 'moonshot', 'minimax', 'qwen', 'deepseek', 'bytedance'];
+            // @所有人：全员群 -> 全部AI；小群 -> 仅该群成员
+            mentionAll = true;
+            if (currentGroup && currentGroup.id !== 'grp_all') {
+                targetProviders = currentGroup.bots.map(bot => modelToProvider[bot]).filter(Boolean);
+            } else {
+                targetProviders = ['openai', 'anthropic', 'xai', 'google', 'zhipu', 'moonshot', 'minimax', 'qwen', 'deepseek', 'bytedance'];
+            }
         } else {
             // 检查@了哪些AI
             const mentionedProviders: string[] = [];
             for (const ai of AI_LIST) {
-                if (text.includes('@' + ai)) {
+                if (text.toLowerCase().includes('@' + ai.toLowerCase())) {
                     const provider = modelToProvider[ai];
                     if (provider && !mentionedProviders.includes(provider)) {
                         mentionedProviders.push(provider);
+                        mentionedModels.push(ai);
                     }
                 }
             }
@@ -353,7 +332,7 @@ const PromptInput = () => {
             }
         }
 
-        const apiKey = localStorage.getItem('omnitalk9_api_key');
+        const apiKey = getApiKey();
 
         if (!apiKey) {
             message.error('请先设置 API Key');
@@ -361,7 +340,7 @@ const PromptInput = () => {
             return;
         }
 
-        // 添加用户消息
+        // 添加用户消息（展示原始文本）
         const userMessage = {
             id: Date.now(),
             text: text,
@@ -379,9 +358,50 @@ const PromptInput = () => {
         // 清空输入框
         setInputValue('');
 
+        // 清理 @ 提及（只用于发送给模型）
+        const stripMentions = (input: string) => {
+            let cleaned = input.replace(/@所有人/g, ' ');
+            for (const ai of AI_LIST) {
+                const re = new RegExp(`@${ai}`, 'gi');
+                cleaned = cleaned.replace(re, ' ');
+            }
+            return cleaned.replace(/\s+/g, ' ').trim();
+        };
+        const userTextForAI = stripMentions(text) || text;
+
+        const announcementNote = '';
+
+        const mentionNotesByProvider: Record<string, string> = {};
+        if (mentionAll) {
+            targetProviders.forEach((provider) => {
+                mentionNotesByProvider[provider] = '注意：用户在群聊中@了你，请优先回应。';
+            });
+        } else if (mentionedModels.length > 0) {
+            mentionedModels.forEach((model) => {
+                const provider = modelToProvider[model];
+                if (provider) {
+                    mentionNotesByProvider[provider] = '注意：用户在群聊中@了你，请优先回应。';
+                }
+            });
+        }
+
         // 同时发起所有AI的请求，谁先回复谁先显示
+        const currentGroupId = currentGroup ? currentGroup.id : 'grp_all';
+        if (!privateChat && currentGroup?.announcement) {
+            targetProviders.forEach((provider) => {
+                ensureGroupAnnouncement(currentGroupId, provider, currentGroup.announcement);
+            });
+        }
         const promises = targetProviders.map(provider => 
-            fetchAI(provider, text, apiKey)
+            fetchAI(
+                provider,
+                userTextForAI,
+                apiKey,
+                mentionNotesByProvider[provider],
+                announcementNote,
+                currentGroupId,
+                !!privateChat
+            )
         );
 
         try {
@@ -418,29 +438,32 @@ const PromptInput = () => {
             }
         }
 
-        if (e.key === 'Enter' && !e.shiftKey) {
+        if (e.key === 'Enter') {
+            // Cmd/Ctrl + Enter: send
             if (e.metaKey || e.ctrlKey) {
+                e.preventDefault();
+                if (inputValue.trim()) {
+                    handleSendMessage();
+                }
                 return;
             }
-            e.preventDefault();
-            if (inputValue.trim()) {
-                handleSendMessage();
-            }
+            // Enter: allow default newline in textarea
+            return;
         }
     };
 
     return (
         <div className={styles.inputContainer}>
             <div className={styles.homeInputWrapper}>
-                <input
+                <textarea
                     ref={inputRef}
-                    type="text"
                     className={styles.promptInput}
                     value={inputValue}
                     onChange={handleInputChange}
                     onKeyDown={onKeyDown}
-                    placeholder="输入消息，@可提及AI，回车发送，Cmd+回车换行"
+                    placeholder="输入消息，@可提及AI，回车换行，Cmd+回车发送"
                     disabled={isLoading}
+                    rows={1}
                 />
                 <img
                     className={classNames(styles.promptClip, { [styles.sending]: isLoading })}

@@ -1,5 +1,6 @@
 import API from '@config/api-config';
 import { DEFAULT_PROVIDER } from '@constants/models';
+import { getApiKey } from '@utils/api-key';
 
 // 全局默认 prompts
 let defaultPromptsCache: Record<string, string> = {};
@@ -24,8 +25,9 @@ export const getHeaders = (apiKey?: string) => {
     const headers: Record<string, string> = {
         'Content-Type': 'application/json',
     };
-    if (apiKey) {
-        headers['X-Api-Key'] = apiKey;
+    const resolvedKey = apiKey || getApiKey();
+    if (resolvedKey) {
+        headers['X-Api-Key'] = resolvedKey;
     }
     return headers;
 };

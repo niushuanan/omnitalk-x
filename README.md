@@ -1,190 +1,94 @@
 # OmniTalk X
 
-**English** | [简体中文](./docs/README_zh-CN.md)
+OmniTalk X is a local‑first, multi‑model AI group chat product. It is designed for “热闹感” (lively companionship) while still letting users create small, purpose‑built groups for specific contexts.
 
-## Introduction
+## Product Concept
+- Companion‑style group chat with multiple AI personas responding in parallel.
+- Users can create focused groups to fit different scenarios (work, study, entertainment).
+- The product feels like a real group, not a single assistant.
 
-> OmniTalk X is a secondary development based on the [OpenAOE](https://github.com/InternLM/OpenAOE) project, mainly borrowing its frontend design with functional extensions and optimizations.
+## Core Features
+- Multi‑model group chat with parallel replies.
+- Private chat with a single model.
+- `@` mention targeting: `@所有人` or specific model.
+- Per‑model System Prompt control.
+- Group creation, editing, and announcements.
+- Conversation memory with local persistence.
+- Real‑time streaming UI.
 
-**OmniTalk X** is an **AI multi-model group chat platform** based on OpenRouter.
+## How It Works (Technical Overview)
+- Frontend: React + TypeScript + Vite with Zustand state management.
+- Backend: FastAPI routes that normalize requests to OpenRouter.
+- Model routing: provider‑level dispatch (`/api/v1/{provider}/chat/completions`).
+- Group logic: the UI decides which models are called based on group membership and mentions.
+- Storage:
+  - Chat history and prompts are stored in browser `localStorage`.
+  - API key is stored on the backend in `api_key.txt` (ignored by git) and also in browser storage for client requests.
 
-With OmniTalk X, you can:
-
-- **Group Chat Mode**: Get responses from multiple AI models simultaneously with one message
-- **Private Chat Mode**: Have private conversations with a single AI
-- **@Mention**: Use @ command to specify which AI should reply
-- **Custom Prompt**: Set exclusive System Prompt for each AI
-- **Group Management**: Create different AI groups and flexibly configure participating models
-- **Context Memory**: Intelligently remember conversation history
-- **Streaming Output**: Display AI responses in real-time
-
----
-
-## Features
-
-| Feature | Description |
-|---------|-------------|
-| Multi-Model Parallel Response | 10 mainstream AIs respond simultaneously |
-| Private Chat Mode | Private conversation with a single AI |
-| @Mention | Specify which AI to reply |
-| System Prompt | Custom prompts for each AI |
-| Group Function | Create and manage AI groups |
-| Context Memory | Intelligently remember conversation history |
-| Streaming Output | Display AI responses in real-time |
-
----
-
-## Supported AI Models
+## Supported Models (Default)
+These are the default OpenRouter model IDs. Users can override in `omnitalkx/backend/config/models_override.json`.
 
 | Model | Provider | Model ID |
-|-------|----------|----------|
-| ChatGPT | openai | openai/gpt-5.2 |
-| Claude | anthropic | anthropic/claude-opus-4.5 |
-| Grok | xai | x-ai/grok-4 |
-| Gemini | google | google/gemini-3-pro-preview |
-| GLM | zhipu | z-ai/glm-5 |
+|---|---|---|
+| ChatGPT | openai | openai/gpt-oss-120b |
+| Claude | anthropic | anthropic/claude-3-haiku |
+| Grok | xai | x-ai/grok-4.1-fast |
+| Gemini | google | google/gemini-2.5-flash-lite |
+| GLM | zhipu | z-ai/glm-4.7-flash |
 | Kimi | moonshot | moonshotai/kimi-k2.5 |
 | MiniMax | minimax | minimax/minimax-m2.5 |
-| Qwen | qwen | qwen/qwen3-max-thinking |
-| DeepSeek | deepseek | deepseek/deepseek-v3.2 |
-| Seed | bytedance | bytedance/seed-1.6-flash |
+| Qwen | qwen | qwen/qwen3-235b-a22b-2507 |
+| DeepSeek | deepseek | deepseek/deepseek-chat-v3.1 |
+| Seed | bytedance | bytedance-seed/seed-1.6-flash |
 
----
-
-## Quick Start
+## Quick Start (Local)
 
 ### Requirements
-
-- Python >= 3.9
-- Node.js >= 16
+- Python 3.10 or 3.11
+- Node.js 16+
 - OpenRouter API Key
 
-### Installation & Run
-
+### Run (Dev)
 ```bash
-# 1. Clone the project
-git clone https://github.com/niushuanan/omnitalk-x
-cd omnitalk-x
-
-# 2. Install frontend dependencies
-cd omnitalkx/frontend
-npm install
-
-# 3. Build frontend
-npm run build
-
-# 4. Start backend
-cd ../..
+# Backend
+cd omnitalkx
+python3 -m venv .venv
+source .venv/bin/activate
 pip install -r requirements.txt
 python main.py
 ```
 
-After the service starts, visit:
-- Frontend: http://localhost:5173
-- Backend: http://localhost:8000
+```bash
+# Frontend
+cd omnitalkx/frontend
+npm install
+npm run dev
+```
 
----
+- Frontend: http://localhost:5173/
+- Backend: http://localhost:8000/
 
-## Configuration
+## Production Deployment
+- Build frontend and serve `frontend/dist` from backend or any static host.
+- Reverse proxy `/api` to the backend.
 
-### Get OpenRouter API Key
+See `DEPLOY.md` for full Nginx configuration and steps.
 
-1. Visit [OpenRouter](https://openrouter.ai/) to register an account
-2. Get your API Key
-3. Click the settings icon on the right side of the page and enter your API Key
-
-### Custom System Prompt
-
-Click the settings icon on the right side to set custom System Prompt for each AI model.
-
----
+## Data & Privacy
+- Chat history, prompts, and “话痨程度” config are saved in browser `localStorage`.
+- API key is saved to `omnitalkx/api_key.txt` on the server and masked in UI.
+- No user data is committed to this repo. Files like `groups.json`, `contexts/`, and `api_key.txt` are git‑ignored.
 
 ## Project Structure
-
 ```
 OmniTalk X/
 ├── omnitalkx/
-│   ├── frontend/          # Frontend project
-│   │   ├── src/
-│   │   │   ├── pages/    # Page components
-│   │   │   ├── components/# Common components
-│   │   │   ├── store/    # State management
-│   │   │   └── config/   # Configuration files
-│   │   └── public/       # Static resources
-│   ├── backend/          # Backend project
-│   │   ├── api/          # API routes
-│   │   ├── service/      # Business services
-│   │   └── config/       # Configuration files
-│   └── main.py           # Project entry
-└── docs/                 # Documentation
+│   ├── frontend/          # React UI
+│   ├── backend/           # FastAPI service
+│   ├── main.py            # App entry
+│   └── groups.json        # Local group data (ignored)
+└── DEPLOY.md              # Deployment guide
 ```
 
----
-
-## Tech Stack
-
-| Layer | Technology |
-|-------|------------|
-| Frontend | React 18 + TypeScript + Vite |
-| State Management | Zustand |
-| UI Components | sea-lion-ui |
-| Backend | FastAPI + Python |
-| API Aggregation | OpenRouter |
-
----
-
-## Code Architecture Principles
-
-### Frontend Architecture
-
-- **Component-based Development**: Using React functional components + Hooks pattern
-- **State Management**: Using Zustand for global state management, divided by functional modules
-- **Type Safety**: TypeScript strict mode with clear interface definitions
-- **Style Management**: Less preprocessor with unified theme color variables
-
-### Backend Architecture
-
-- **RESTful API**: Clear route design
-- **Service Layering**: API → Service → Model layered decoupling
-- **Configuration Management**: YAML configuration files, supporting multi-environment switching
-- **Logging System**: Unified logging specification
-
-### Core Design Patterns
-
-1. **Frontend**
-   - Custom Hooks: Reuse business logic
-   - Context: Global configuration management
-   - Interceptors: Unified request/response handling
-
-2. **Backend**
-   - Dependency Injection: Service layer decoupling
-   - Streaming Response: Server-Sent Events (SSE)
-   - CORS: Cross-Origin Resource Sharing configuration
-
----
-
-## FAQ
-
-### 1. How to get OpenRouter API Key?
-
-Visit [OpenRouter](https://openrouter.ai/) to register an account and get your API Key in the personal center.
-
-### 2. Why did the message sending fail?
-
-- Check if the API Key is valid
-- Check if the network connection is normal
-- Confirm if the selected AI model is available
-
-### 3. How to check consumed credits?
-
-View usage statistics on the OpenRouter account page.
-
-### 4. Does it support custom models?
-
-Currently supports all models provided by OpenRouter, new models can be added through configuration files.
-
----
-
 ## License
-
-MIT License
+MIT

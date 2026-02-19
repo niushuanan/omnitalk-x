@@ -1,27 +1,44 @@
-import datetime
-import unittest
-from time import mktime
-from wsgiref.handlers import format_date_time
+import json
+import sys
+from pathlib import Path
 
-from omnitalk9.backend.model.claude import ClaudeMessage
-from omnitalk9.backend.service.service_claude import _gen_prompt
-from omnitalk9.backend.service.service_xunfei import _calc_authorization
+import pytest
+
+ROOT = Path(__file__).resolve().parents[2]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+from omnitalkx.backend.service import service_openrouter as svc
 
 
-class TestService(unittest.TestCase):
+def test_build_payload_injects_system_message():
+    payload = {
+        "messages": [{"role": "user", "content": "hello"}],
+    }
+    normalized = svc.build_payload("openai", payload)
+    assert normalized["stream"] is True
+    assert normalized["model"] == svc.PROVIDERS["openai"]["id"]
+    assert normalized["messages"][0]["role"] == "system"
+    assert "content" in normalized["messages"][0]
 
-    def test_claude_gen_prompt(self):
-        system_content = "Act as a python coder, when user ask something, answer with code"
-        msgs = [ClaudeMessage(role="system", content=system_content)]
-        prompt_str = _gen_prompt(msgs)
-        self.assertTrue(prompt_str, f"{system_content}\n\nAssistant:")
 
-    def test_spark_calc_authorization(self):
-        t = datetime.datetime(year=2024, month=1, day=17, hour=11, minute=11, second=11)
-        date = format_date_time(mktime(t.timetuple()))
-        ak = "ak"
-        sk = "sk"
-        host = "host"
-        sign = _calc_authorization(ak, sk, date, host)
-        self.assertTrue(sign, "YXBpX2tleT0iYWsiLCBhbGdvcml0aG09ImhtYWMtc2hhMjU2IiwgaGVhZGVycz0iaG9zdCBkYXRlIHJl"
-                              "cXVlc3QtbGluZSIsIHNpZ25hdHVyZT0iS2ZMdHdFMk9sWFhDRTdCejJtTjZuRFhkTS8xVnRid24weTIvcTA3V2FLQT0i")
+def test_extract_delta_text_handles_message_content():
+    data = {"choices": [{"message": {"content": "hi"}}]}
+    assert svc.extract_delta_text(data) == "hi"
+
+
+def test_extract_delta_text_handles_delta_content():
+    data = {"choices": [{"delta": {"content": "stream"}}]}
+    assert svc.extract_delta_text(data) == "stream"
+
+
+def test_normalize_error_from_json():
+    payload = {"error": {"message": "bad request"}}
+    raw = json.dumps(payload)
+    assert svc.normalize_error(raw) == "bad request"
+
+
+def test_get_random_providers_subset():
+    providers = svc.get_random_providers(5)
+    assert 0 < len(providers) <= 5
+    assert set(providers).issubset(set(svc.PROVIDERS.keys()))
