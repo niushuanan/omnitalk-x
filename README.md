@@ -2,27 +2,27 @@
 
 **English** | [简体中文](./docs/README_zh-CN.md)
 
-OmniTalk X is a local‑first, multi‑model AI group chat product. It is designed for “热闹感” (lively companionship) while still letting users create small, purpose‑built groups for specific contexts.
+OmniTalk X is a local-first, multi-model AI group chat product. It emphasizes lively companionship while letting users create focused groups for specific contexts.
 
 ## Product Concept
-- Companion‑style group chat with multiple AI personas responding in parallel.
-- Users can create focused groups to fit different scenarios (work, study, entertainment).
+- Companion-style group chat with multiple AI personas responding in parallel.
+- Users can create focused groups for work, study, entertainment, and more.
 - The product feels like a real group, not a single assistant.
 
 ## Core Features
-- Multi‑model group chat with parallel replies.
+- Multi-model group chat with parallel replies.
 - Private chat with a single model.
-- `@` mention targeting: `@所有人` or specific model.
-- Per‑model System Prompt control.
+- `@` mention targeting: `@all` or specific model.
+- Per-model System Prompt control.
 - Group creation, editing, and announcements.
-- “话痨程度” is stored per group and only affects the current group.
+- Chat style is stored per group and only affects the current group.
 - Conversation memory with local persistence.
-- Real‑time streaming UI.
+- Real-time streaming UI.
 
 ## How It Works (Technical Overview)
 - Frontend: React + TypeScript + Vite with Zustand state management.
 - Backend: FastAPI routes that normalize requests to OpenRouter.
-- Model routing: provider‑level dispatch (`/api/v1/{provider}/chat/completions`).
+- Model routing: provider-level dispatch (`/api/v1/{provider}/chat/completions`).
 - Group logic: the UI decides which models are called based on group membership and mentions.
 - Storage:
   - Chat history and prompts are stored in browser `localStorage`.
@@ -79,9 +79,9 @@ npm run dev
 See `DEPLOY.md` for full Nginx configuration and steps.
 
 ## Data & Privacy
-- Chat history, prompts, and “话痨程度” config are saved in browser `localStorage`.
+- Chat history, prompts, and chat style config are saved in browser `localStorage`.
 - API key is saved to `omnitalkx/api_key.txt` on the server and masked in UI.
-- No user data is committed to this repo. Files like `groups.json`, `contexts/`, and `api_key.txt` are git‑ignored.
+- No user data is committed to this repo. Files like `groups.json`, `contexts/`, and `api_key.txt` are git-ignored.
 
 ## Project Structure
 ```
