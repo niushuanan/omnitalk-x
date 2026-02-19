@@ -18,6 +18,7 @@ logger = log(__name__)
 
 BASE_DIR = Path(__file__).resolve().parent
 API_KEY_FILE = BASE_DIR.parent.parent / "api_key.txt"
+FALLBACK_KEY_FILE = Path.home() / ".omnitalkx" / "api_key.txt"
 
 OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
 DEFAULT_API_KEY = ""
@@ -148,13 +149,14 @@ GOOGLE_FALLBACK_MODELS = [
 
 def load_api_key() -> str:
     """从本地文件加载 API Key"""
-    if API_KEY_FILE.exists():
-        try:
-            key = API_KEY_FILE.read_text(encoding="utf-8").strip()
-            if key:
-                return key
-        except Exception:
-            pass
+    for path in (API_KEY_FILE, FALLBACK_KEY_FILE):
+        if path.exists():
+            try:
+                key = path.read_text(encoding="utf-8").strip()
+                if key:
+                    return key
+            except Exception:
+                pass
     return DEFAULT_API_KEY
 
 
@@ -164,7 +166,12 @@ def save_api_key(key: str) -> bool:
         API_KEY_FILE.write_text(key.strip(), encoding="utf-8")
         return True
     except Exception:
-        return False
+        try:
+            FALLBACK_KEY_FILE.parent.mkdir(parents=True, exist_ok=True)
+            FALLBACK_KEY_FILE.write_text(key.strip(), encoding="utf-8")
+            return True
+        except Exception:
+            return False
 
 
 def get_context(provider: str) -> list:

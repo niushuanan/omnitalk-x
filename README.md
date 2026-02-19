@@ -80,7 +80,7 @@ See `DEPLOY.md` for full Nginx configuration and steps.
 
 ## Data & Privacy
 - Chat history, prompts, and chat style config are saved in browser `localStorage`.
-- API key is saved to `omnitalkx/api_key.txt` on the server and masked in UI.
+- API key is saved to `omnitalkx/api_key.txt` (or `~/.omnitalkx/api_key.txt` if the project directory is not writable) and masked in UI.
 - No user data is committed to this repo. Files like `groups.json`, `contexts/`, and `api_key.txt` are git-ignored.
 
 ## Project Structure

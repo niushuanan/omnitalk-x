@@ -80,7 +80,7 @@ npm run dev
 
 ## 数据与隐私
 - 聊天记录、Prompt、话痨程度保存在浏览器 `localStorage`。
-- API Key 存储在服务端 `omnitalkx/api_key.txt`，界面只展示脱敏信息。
+- API Key 存储在服务端 `omnitalkx/api_key.txt`（若目录不可写，会写入 `~/.omnitalkx/api_key.txt`），界面只展示脱敏信息。
 - 用户数据不会提交到仓库，`groups.json`、`contexts/`、`api_key.txt` 均已忽略。
 
 ## 项目结构
