@@ -1,5 +1,7 @@
 # OmniTalk X
 
+**English** | [简体中文](./docs/README_zh-CN.md)
+
 OmniTalk X is a local‑first, multi‑model AI group chat product. It is designed for “热闹感” (lively companionship) while still letting users create small, purpose‑built groups for specific contexts.
 
 ## Product Concept
@@ -13,7 +15,7 @@ OmniTalk X is a local‑first, multi‑model AI group chat product. It is design
 - `@` mention targeting: `@所有人` or specific model.
 - Per‑model System Prompt control.
 - Group creation, editing, and announcements.
-- “话痨程度”参数按群保存，仅影响当前群。
+- “话痨程度” is stored per group and only affects the current group.
 - Conversation memory with local persistence.
 - Real‑time streaming UI.
 
@@ -25,6 +27,7 @@ OmniTalk X is a local‑first, multi‑model AI group chat product. It is design
 - Storage:
   - Chat history and prompts are stored in browser `localStorage`.
   - API key is stored on the backend in `api_key.txt` (ignored by git) and also in browser storage for client requests.
+  - Group announcements only affect their own group context.
 
 ## Supported Models (Default)
 These are the default OpenRouter model IDs. Users can override in `omnitalkx/backend/config/models_override.json`.
@@ -77,7 +80,6 @@ See `DEPLOY.md` for full Nginx configuration and steps.
 
 ## Data & Privacy
 - Chat history, prompts, and “话痨程度” config are saved in browser `localStorage`.
-- 群公告只影响所属群聊的上下文。
 - API key is saved to `omnitalkx/api_key.txt` on the server and masked in UI.
 - No user data is committed to this repo. Files like `groups.json`, `contexts/`, and `api_key.txt` are git‑ignored.
 
